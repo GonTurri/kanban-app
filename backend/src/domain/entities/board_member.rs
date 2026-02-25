@@ -1,8 +1,8 @@
-use sqlx::postgres::types::PgCube::Point;
-use uuid::Uuid;
+use tracing_subscriber::fmt::writer::EitherWriter::B;
 use crate::entities::board_role::BoardRole;
+use uuid::Uuid;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct BoardMember {
     pub id: Uuid,
     pub user_id: Uuid,
@@ -17,4 +17,17 @@ impl BoardMember {
             role
         }
     }
+    
+    pub fn can_edit_board(&self) -> bool {
+        self.role == BoardRole::Owner || self.role == BoardRole::Editor
+    }
+    
+    pub fn can_view_board(&self) -> bool {
+        self.role == BoardRole::Owner || self.role == BoardRole::Editor || self.role == BoardRole::Viewer
+    }
+     
+    pub fn is_owner(&self) -> bool {
+        self.role == BoardRole::Owner
+    }
+    
 }

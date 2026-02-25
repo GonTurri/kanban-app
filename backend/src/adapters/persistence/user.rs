@@ -34,19 +34,38 @@ impl From<UserDb> for User {
 
 #[async_trait]
 impl UserPersistence for PostgresPersistence {
-    async fn create_user(&self, username: &str, email: &str, password_hash: &str) -> Result<()> {
-        let uuid = Uuid::new_v4();
-
+    async fn create_user(&self, user: &User) -> Result<()> {
         sqlx::query!(
             "INSERT INTO users (id, username, email, password_hash) VALUES ($1, $2, $3, $4)",
-            uuid,
-            username,
-            email,
-            password_hash
+            user.id,
+            user.username,
+            user.email,
+            user.password_hash
         )
             .execute(&self.pool)
             .await?;
 
         Ok(())
+    }
+
+    async fn get_user(&self, id: Uuid) -> Result<Option<User>> {
+        let result = sqlx::query_as!(UserDb , "SELECT * FROM users WHERE id = $1", id)
+            .fetch_optional(&self.pool)
+            .await?
+            .map(Into::into);
+
+        Ok(result)
+    }
+
+    async fn exists_by_id(&self, id: Uuid) -> Result<bool> {
+        let result = sqlx::query_scalar!(
+            "SELECT EXISTS(SELECT 1 FROM users WHERE id = $1)",
+            id
+        )
+            .fetch_one(&self.pool)
+            .await?;
+
+
+        Ok(result.unwrap_or(false))
     }
 }

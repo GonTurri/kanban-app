@@ -1,9 +1,9 @@
 pub mod board;
 pub mod user;
-mod board_role;
-mod board_member;
-mod board_column;
-mod column_type;
-mod item;
-mod item_priority;
-mod item_history;
+pub mod board_role;
+pub mod board_member;
+pub mod board_column;
+pub mod column_type;
+pub mod item;
+pub mod item_priority;
+pub mod item_history;

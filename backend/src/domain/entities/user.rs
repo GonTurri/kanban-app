@@ -9,3 +9,14 @@ pub struct User {
     pub password_hash: String,
     pub created_at: chrono::DateTime<Utc>,
 }
+impl User {
+    pub fn new(username: String, email: String, password_hash: String) -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            username,
+            email,
+            password_hash,
+            created_at: Utc::now(),
+        }
+    }
+}

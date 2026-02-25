@@ -10,14 +10,14 @@ use crate::prelude::*;
 use crate::use_cases::user::UserUseCases;
 
 #[derive(Debug, Clone, Deserialize)]
-struct RegisterPayload {
+pub struct RegisterPayload {
     username: String,
     email: String,
     password: SecretString,
 }
 
 #[derive(Debug, Clone, Serialize)]
-struct RegisterResponse {
+pub struct RegisterResponse {
     success: bool,
 }
 
@@ -28,7 +28,7 @@ pub async fn register(
 ) -> Result<impl IntoResponse> {
     info!("Register user called");
 
-    user_use_cases.add(&payload.username, &payload.email, &payload.password).await?;
+    user_use_cases.register(payload.username, payload.email, &payload.password).await?;
     Ok(
         (
             StatusCode::CREATED,

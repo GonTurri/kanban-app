@@ -12,12 +12,12 @@ pub struct BoardColumn {
     pub board_id: Uuid,
     pub name: String,
     pub kind: ColumnType,
-    pub order_index: i32,
+    pub order_index: usize,
 }
 
 impl BoardColumn {
 
-    pub fn new (board_id: Uuid, name: String, kind: ColumnType, order_index: i32) -> Self {
+    pub fn new (board_id: Uuid, name: String, kind: ColumnType, order_index: usize) -> Self {
         Self {
             id: Uuid::new_v4(),
             board_id,
@@ -50,8 +50,14 @@ impl BoardColumn {
     pub fn move_item(&self, current_item_count: usize, item: &mut Item) -> DomainResult<ItemHistory> {
         self.can_accept_new_item(current_item_count)?;
 
-        item.move_to_column(self.id)
+        let is_done = match self.kind {
+            ColumnType::Done => true,
+            _ => false
+        };
+
+        item.move_to_column(self.id, is_done)
     }
+
 
     fn can_accept_new_item(&self, current_items_count: usize) -> DomainResult<()> {
         match self.kind {

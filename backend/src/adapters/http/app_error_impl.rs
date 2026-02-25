@@ -22,6 +22,10 @@ impl IntoResponse for AppError {
             AppError::Domain(reason) => {
                 (StatusCode::BAD_REQUEST, reason.to_string()).into_response()
             }
+            
+            AppError::ResourceNotFound(resource_name, id) => {
+                (StatusCode::NOT_FOUND, format!("{} of id {} not found", resource_name, id)).into_response()
+            }
             _ => (StatusCode::INTERNAL_SERVER_ERROR, "Internal error").into_response(),
         }
     }

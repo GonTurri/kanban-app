@@ -1,4 +1,5 @@
 use thiserror::Error;
+use uuid::Uuid;
 
 #[derive(Debug, Error)]
 pub enum DomainError {
@@ -17,6 +18,9 @@ pub enum DomainError {
 
     #[error("this board has reach its maximum member capacity")]
     BoardMemberLimitExceeded,
+    
+    #[error("this board no member of id {0}")]
+    MemberNotFound(Uuid),
 }
 
 pub type DomainResult<T> = Result<T, DomainError>;

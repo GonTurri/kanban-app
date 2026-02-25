@@ -1,4 +1,5 @@
 use thiserror::Error;
+use uuid::Uuid;
 use crate::domain;
 
 #[derive(Error, Debug)]
@@ -17,4 +18,7 @@ pub enum AppError {
     
     #[error("{0}")]
     Domain(#[from] domain::domain_error::DomainError),
+    
+    #[error("Resource not found {0} of id: {1}")]
+    ResourceNotFound(&'static str, Uuid),
 }

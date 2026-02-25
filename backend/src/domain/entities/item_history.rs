@@ -5,13 +5,13 @@ use uuid::Uuid;
 pub struct ItemHistory {
     pub id: Uuid,
     pub item_id: Uuid,
-    prev_column_id: Option<Uuid>,
-    new_column_id: Option<Uuid>,
-    timestamp: chrono::DateTime<Utc>,
+    pub prev_column_id: Option<Uuid>,
+    pub new_column_id: Uuid,
+    pub timestamp: chrono::DateTime<Utc>,
 }
 
 impl ItemHistory {
-    pub fn new(item_id: Uuid, prev_column_id: Option<Uuid>, new_column_id: Option<Uuid>) -> Self {
+    pub fn new(item_id: Uuid, prev_column_id: Option<Uuid>, new_column_id: Uuid) -> Self {
         Self {
             id: Uuid::new_v4(),
             item_id,

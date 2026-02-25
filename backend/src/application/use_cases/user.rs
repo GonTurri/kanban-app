@@ -4,10 +4,15 @@ use crate::prelude::*;
 use async_trait::async_trait;
 use secrecy::{ExposeSecret, SecretString};
 use tracing::{info, instrument};
+use uuid::Uuid;
+use crate::entities::user::User;
 
 #[async_trait]
 pub trait UserPersistence: Send + Sync {
-    async fn create_user(&self, username: &str, email: &str, password_hash: &str) -> Result<()>;
+    async fn create_user(&self, user: &User) -> Result<()>;
+    async fn get_user(&self, id: Uuid) -> Result<Option<User>>;
+
+    async fn exists_by_id(&self, id: Uuid) -> Result<bool>;
 }
 
 pub trait UserCredentialsHasher: Send + Sync {
@@ -31,13 +36,14 @@ impl UserUseCases {
     }
 
     #[instrument(skip(self))]
-    pub async fn add(&self, username: &str, email: &str, password: &SecretString) -> Result<()> {
-        info!("Adding user...");
+    pub async fn register(&self, username: String, email: String, password: &SecretString) -> Result<()> {
+        info!("Registerin user...");
 
-        let hash = &self.hasher.hash_password(password.expose_secret())?;
-        self.persistence.create_user(username, email, hash).await?;
+        let hash = self.hasher.hash_password(password.expose_secret())?;
+        let user = User::new(username, email, hash);
+        self.persistence.create_user(&user).await?;
 
-        info!("Adding user finished.");
+        info!("Registering user finished.");
 
         Ok(())
     }
@@ -55,14 +61,19 @@ mod test {
     impl UserPersistence for MockUserPersistence {
         async fn create_user(
             &self,
-            username: &str,
-            email: &str,
-            _password_hash: &str,
+            user: &User,
         ) -> Result<()> {
-            assert_eq!(username, "testuser");
-            assert_eq!(email, "testuser@gmail.com");
-
+            assert_eq!(user.username, "testuser");
+            assert_eq!(user.email, "testuser@gmail.com");
             Ok(())
+        }
+
+        async fn get_user(&self, id: Uuid) -> Result<Option<User>> {
+            todo!()
+        }
+
+        async fn exists_by_id(&self, id: Uuid) -> Result<bool> {
+            todo!()
         }
     }
 
@@ -82,7 +93,7 @@ mod test {
         );
 
         let result = user_use_cases
-            .add("testuser", "testuser@gmail.com", &"testuser_pw".into())
+            .register("testuser".to_string(), "testuser@gmail.com".to_string(), &"testuser_pw".into())
             .await;
 
         assert!(result.is_ok());
