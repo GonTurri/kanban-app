@@ -1,6 +1,7 @@
 use sqlx::PgPool;
 
 pub mod user;
+pub mod item;
 
 #[derive(Clone)]
 pub struct PostgresPersistence {

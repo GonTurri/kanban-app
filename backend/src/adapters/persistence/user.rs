@@ -1,12 +1,12 @@
 use async_trait::async_trait;
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::{DateTime, Utc};
 use serde::Serialize;
 use uuid::Uuid;
 
 use crate::{
     adapters::persistence::PostgresPersistence,
-    prelude::*,
     entities::user::User,
+    prelude::*,
     use_cases::user::UserPersistence,
 };
 

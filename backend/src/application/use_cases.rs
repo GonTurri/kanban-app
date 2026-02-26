@@ -1,5 +1,5 @@
 pub mod user;
-mod board;
-mod column;
-mod item;
-mod get_item_metrics_query;
+pub mod board;
+pub mod column;
+pub mod item;
+pub mod get_item_metrics_query;

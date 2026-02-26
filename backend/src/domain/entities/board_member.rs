@@ -1,4 +1,3 @@
-use tracing_subscriber::fmt::writer::EitherWriter::B;
 use crate::entities::board_role::BoardRole;
 use uuid::Uuid;
 

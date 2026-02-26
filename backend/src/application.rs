@@ -1,2 +1,2 @@
 pub mod app_error;
-pub(crate) mod use_cases;
+pub mod use_cases;
