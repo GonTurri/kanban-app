@@ -57,7 +57,7 @@ impl From<ColumnDb> for BoardColumn {
     }
 }
 
-fn extract_db_kind_and_limit(value: &ColumnType) -> (ColumnKindDb, Option<i32>) {
+pub fn extract_db_kind_and_limit(value: &ColumnType) -> (ColumnKindDb, Option<i32>) {
     match value {
         ColumnType::Todo { limit: l } => (ColumnKindDb::Todo, l.map(|value| value as i32)),
         ColumnType::Wip { limit: l } => (ColumnKindDb::Wip, l.map(|value| value as i32)),

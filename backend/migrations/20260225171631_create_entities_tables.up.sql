@@ -2,7 +2,7 @@ CREATE TABLE boards (
     id UUID PRIMARY KEY,
     owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE ,
     title VARCHAR(255) NOT NULL,
-    description TEXT
+    description TEXT NOT NULL
 );
 
 CREATE TYPE board_role AS ENUM('owner', 'editor', 'viewer');
@@ -10,7 +10,7 @@ CREATE TYPE board_role AS ENUM('owner', 'editor', 'viewer');
 CREATE TABLE board_members (
   id UUID PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  board_id UUID REFERENCES boards(id) ON DELETE CASCADE,
+  board_id UUID NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
   role board_role NOT NULL,
   UNIQUE (board_id, user_id)
 );
