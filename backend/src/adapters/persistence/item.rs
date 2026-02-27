@@ -7,9 +7,9 @@ use crate::use_cases::item::ItemPersistence;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use sqlx::{Postgres, Transaction, Type};
+use sqlx::{Postgres, Transaction};
 use uuid::Uuid;
-#[derive(Type, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(sqlx::Type, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[sqlx(type_name = "item_priority", rename_all = "lowercase")]
 pub enum ItemPriorityDb {
     Low,
