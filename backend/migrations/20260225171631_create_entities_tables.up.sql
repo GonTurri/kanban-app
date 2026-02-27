@@ -21,9 +21,9 @@ CREATE TABLE board_columns (
     id UUID PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     order_index BIGINT NOT NULL CHECK (order_index >= 0),
-    type column_kind NOT NULL,
+    column_type column_kind NOT NULL,
     column_limit INTEGER CHECK (column_limit >= 0),
-    board_id UUID REFERENCES boards(id) ON DELETE CASCADE
+    board_id UUID NOT NULL REFERENCES boards(id) ON DELETE CASCADE
 );
 
 CREATE TYPE item_priority AS ENUM('low', 'medium', 'high');
