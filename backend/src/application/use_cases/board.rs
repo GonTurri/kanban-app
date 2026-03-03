@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use crate::application::use_cases::user::UserPersistence;
 use crate::entities::board::Board;
 use crate::entities::board_column::BoardColumn;
@@ -8,21 +9,39 @@ use crate::prelude::*;
 use async_trait::async_trait;
 use serde::Serialize;
 use std::sync::Arc;
+use chrono::{DateTime, Utc};
 use tracing::{info, instrument};
 use uuid::Uuid;
+use crate::entities::item::Item;
+use crate::entities::item_priority::ItemPriority;
+use crate::use_cases::column::ColumnPersistence;
+use crate::use_cases::item::ItemPersistence;
+
+const ITEM_FETCH_LIMIT_BY_BOARD: i64 = 10;
 
 #[derive(Serialize)]
 pub struct BoardResponseDto {
     pub id: Uuid,
     pub title: String,
     pub description: String,
+    pub owner_id: Uuid,
+    pub members: Vec<BoardMemberResponseDto>,
     pub columns: Vec<ColumnResponseDto>,
+}
+
+#[derive(Serialize)]
+pub struct BoardMemberResponseDto {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub role: BoardRole,
 }
 
 #[derive(Serialize)]
 pub struct ColumnResponseDto {
     pub id: Uuid,
     pub name: String,
+    pub order_index: usize,
+    pub kind: ColumnType,
     pub items: Vec<ItemResponseDto>,
 }
 
@@ -30,7 +49,38 @@ pub struct ColumnResponseDto {
 pub struct ItemResponseDto {
     pub id: Uuid,
     pub title: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    pub priority: ItemPriority,
+    pub assigned_to: Option<Uuid>,
+    pub is_done: bool,
+    pub created_at: DateTime<Utc>,
 }
+
+impl From<Item> for ItemResponseDto {
+    fn from(value: Item) -> Self {
+        Self {
+            id: value.id,
+            title: value.title,
+            description: value.description,
+            priority: value.priority,
+            assigned_to: value.assigned_to,
+            is_done: value.is_done,
+            created_at: value.created_at
+        }
+    }
+}
+
+impl From<BoardMember> for BoardMemberResponseDto {
+    fn from(value: BoardMember) -> Self {
+        Self {
+            id: value.id,
+            user_id: value.user_id,
+            role: value.role
+        }
+    }
+}
+
 
 #[async_trait]
 pub trait BoardPersistence: Send + Sync {
@@ -49,16 +99,57 @@ pub trait BoardPersistence: Send + Sync {
 #[derive(Clone)]
 pub struct BoardUseCases {
     board_persistence: Arc<dyn BoardPersistence>,
+    column_persistence: Arc<dyn ColumnPersistence>,
+    item_persistence: Arc<dyn ItemPersistence>,
     user_persistence: Arc<dyn UserPersistence>,
 }
 
 impl BoardUseCases {
-    pub fn new(board_persistence: Arc<dyn BoardPersistence>, user_persistence: Arc<dyn UserPersistence>) -> Self {
-        Self { board_persistence, user_persistence }
+    pub fn new(board_persistence: Arc<dyn BoardPersistence>,column_persistence: Arc<dyn ColumnPersistence>, item_persistence: Arc<dyn ItemPersistence> , user_persistence: Arc<dyn UserPersistence>, ) -> Self {
+        Self { board_persistence, column_persistence, item_persistence, user_persistence }
     }
 
-    pub async fn get_full_board(&self, board_id: Uuid) -> Result<()> {
-        todo!()
+    pub async fn get_full_board(&self, board_id: Uuid, action_user: Uuid) -> Result<BoardResponseDto> {
+        let board = self.board_persistence.get_board(board_id).await?
+            .ok_or(AppError::ResourceNotFound("Board", board_id))?;
+
+        if !board.can_view_board(action_user){
+            return Err(AppError::InvalidCredentials)
+        }
+
+
+        let columns = self.column_persistence.get_by_board_id(board_id).await?;
+
+        let items = self.item_persistence.get_top_items_by_board(board_id, ITEM_FETCH_LIMIT_BY_BOARD).await?;
+
+        let mut items_by_column: HashMap<Uuid, Vec<ItemResponseDto>> = HashMap::new();
+        for item in items {
+            items_by_column
+                .entry(item.column_id)
+                .or_default()
+                .push(item.into())
+        }
+
+        let columns_dto: Vec<ColumnResponseDto> = columns.into_iter()
+            .map(|col| ColumnResponseDto {
+                id: col.id,
+                name: col.name,
+                kind: col.kind,
+                order_index: col.order_index,
+                items: items_by_column.remove(&col.id).unwrap_or_default()
+            })
+            .collect();
+
+        let board_dto: BoardResponseDto = BoardResponseDto {
+            id: board_id,
+            title: board.title,
+            description: board.description,
+            owner_id: board.owner_id,
+            members: board.members.into_iter().map(Into::into).collect(),
+            columns: columns_dto
+        };
+
+        Ok(board_dto)
     }
 
     #[instrument(skip(self))]

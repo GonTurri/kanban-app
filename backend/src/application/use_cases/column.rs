@@ -1,16 +1,15 @@
 use crate::application::use_cases::board::BoardPersistence;
 use crate::entities::board_column::BoardColumn;
+use crate::entities::column_type::ColumnType;
+use crate::prelude::AppError;
 use crate::prelude::*;
 use async_trait::async_trait;
 use std::sync::Arc;
 use uuid::Uuid;
-use crate::entities::column_type::ColumnType;
-use crate::prelude::AppError;
 
 #[async_trait]
 pub trait ColumnPersistence: Send + Sync {
-
-    async fn get_item_count(&self, column_id: Uuid)-> Result<usize>;
+    async fn get_item_count(&self, column_id: Uuid) -> Result<usize>;
 
     async fn create_column(&self, column: &BoardColumn) -> Result<Uuid>;
 
@@ -26,14 +25,32 @@ pub trait ColumnPersistence: Send + Sync {
 #[derive(Clone)]
 pub struct ColumnUseCases {
     column_persistence: Arc<dyn ColumnPersistence>,
-    board_persistence: Arc<dyn BoardPersistence>
+    board_persistence: Arc<dyn BoardPersistence>,
 }
 
 impl ColumnUseCases {
-    pub async fn add_board_column(&self, board_id: Uuid, action_user: Uuid, name: String, kind: ColumnType, target_index: usize) -> Result<Uuid>{
-        let board = self.board_persistence.get_board(board_id).await?
+    pub fn new(
+        column_persistence: Arc<dyn ColumnPersistence>,
+        board_persistence: Arc<dyn BoardPersistence>,
+    ) -> Self {
+        Self {
+            column_persistence,
+            board_persistence,
+        }
+    }
+    pub async fn add_board_column(
+        &self,
+        board_id: Uuid,
+        action_user: Uuid,
+        name: String,
+        kind: ColumnType,
+        target_index: usize,
+    ) -> Result<Uuid> {
+        let board = self
+            .board_persistence
+            .get_board(board_id)
+            .await?
             .ok_or(AppError::ResourceNotFound("Board", board_id))?;
-
 
         if !board.can_edit_board(action_user) {
             return Err(AppError::InvalidCredentials);
@@ -50,23 +67,33 @@ impl ColumnUseCases {
 
         current_columns.insert(target_index, new_column);
 
-        for (index,column) in current_columns.iter_mut().enumerate() {
+        for (index, column) in current_columns.iter_mut().enumerate() {
             column.order_index = index;
         }
 
         self.column_persistence.save_all(&current_columns).await?;
 
         Ok(new_id)
-
     }
 
-    pub async fn update_column(&self, column_id: Uuid, action_user:Uuid, name: String, kind: ColumnType) -> Result<()> {
-        let mut column = self.column_persistence.get_column(column_id).await?
+    pub async fn update_column(
+        &self,
+        column_id: Uuid,
+        action_user: Uuid,
+        name: String,
+        kind: ColumnType,
+    ) -> Result<()> {
+        let mut column = self
+            .column_persistence
+            .get_column(column_id)
+            .await?
             .ok_or(AppError::ResourceNotFound("Column", column_id))?;
 
-        let board = self.board_persistence.get_board(column.board_id).await?
+        let board = self
+            .board_persistence
+            .get_board(column.board_id)
+            .await?
             .ok_or(AppError::ResourceNotFound("Board", column.board_id))?;
-
 
         if !board.can_edit_board(action_user) {
             return Err(AppError::InvalidCredentials);
@@ -80,10 +107,18 @@ impl ColumnUseCases {
         Ok(())
     }
 
-    pub async fn move_column(&self, board_id: Uuid, column_id: Uuid, action_user: Uuid, target_index: usize) -> Result<()> {
-        let board = self.board_persistence.get_board(board_id).await?
+    pub async fn move_column(
+        &self,
+        board_id: Uuid,
+        column_id: Uuid,
+        action_user: Uuid,
+        target_index: usize,
+    ) -> Result<()> {
+        let board = self
+            .board_persistence
+            .get_board(board_id)
+            .await?
             .ok_or(AppError::ResourceNotFound("Board", board_id))?;
-
 
         if !board.can_edit_board(action_user) {
             return Err(AppError::InvalidCredentials);
@@ -93,10 +128,10 @@ impl ColumnUseCases {
 
         current_columns.sort_by_key(|c| c.order_index);
 
-
-        let current_position = current_columns.iter().position(|c| c.id == column_id)
+        let current_position = current_columns
+            .iter()
+            .position(|c| c.id == column_id)
             .ok_or(AppError::ResourceNotFound("Column", column_id))?;
-
 
         let column = current_columns.remove(current_position);
 
@@ -106,21 +141,25 @@ impl ColumnUseCases {
 
         for (i, col) in current_columns.iter_mut().enumerate() {
             col.order_index = i;
-        };
+        }
 
         self.column_persistence.save_all(&current_columns).await?;
 
         Ok(())
-
     }
 
     pub async fn delete_column(&self, column_id: Uuid, action_user: Uuid) -> Result<()> {
-        let column = self.column_persistence.get_column(column_id).await?
+        let column = self
+            .column_persistence
+            .get_column(column_id)
+            .await?
             .ok_or(AppError::ResourceNotFound("Column", column_id))?;
 
-        let board = self.board_persistence.get_board(column.board_id).await?
+        let board = self
+            .board_persistence
+            .get_board(column.board_id)
+            .await?
             .ok_or(AppError::ResourceNotFound("Board", column.board_id))?;
-
 
         if !board.can_edit_board(action_user) {
             return Err(AppError::InvalidCredentials);
@@ -131,5 +170,4 @@ impl ColumnUseCases {
 
         Ok(())
     }
-
 }

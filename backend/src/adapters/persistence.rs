@@ -4,6 +4,7 @@ pub mod user;
 pub mod item;
 pub mod column;
 pub mod board;
+mod auth;
 
 #[derive(Clone)]
 pub struct PostgresPersistence {

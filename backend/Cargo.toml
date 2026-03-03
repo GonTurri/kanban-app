@@ -21,6 +21,8 @@ uuid = { version = "1.18.0", features = ["serde", "v4"] }
 chrono = { version = "0.4.41", features = ["serde"] }
 thiserror = "2.0"
 async-trait = "0.1.89"
-axum-extra = { version = "0.10", features = ["cookie"] }
+axum-extra = { version = "0.10", features = ["cookie", "typed-header"] }
 time = "0.3"
 clap = { version = "4.5.58", features = ["derive"] }
+jsonwebtoken = "9.0.0"
+log = "0.4.29"

@@ -123,6 +123,38 @@ impl ItemPersistence for PostgresPersistence {
         Ok(result)
     }
 
+    async fn get_top_items_by_board(
+        &self,
+        board_id: Uuid,
+        limit_by_column: i64,
+    ) -> Result<Vec<Item>> {
+        let result = sqlx::query_as!(
+            ItemDb,
+            r#"WITH RankedItems AS (
+            SELECT id, title, description, priority,
+                   done, board_id, column_id, assigned_to, created_at,
+                   ROW_NUMBER() OVER(PARTITION BY column_id ORDER BY created_at DESC) as rn
+                   FROM board_items
+                   WHERE board_id = $1
+
+        )
+        SELECT id, title, description, priority "priority: ItemPriorityDb",
+                   done, board_id, column_id, assigned_to, created_at
+                   FROM RankedItems
+                   WHERE rn <= $2
+                   ORDER BY column_id, rn ASC"#,
+            board_id,
+            limit_by_column
+        )
+        .fetch_all(&self.pool)
+        .await?
+        .into_iter()
+        .map(Into::into)
+        .collect();
+
+        Ok(result)
+    }
+
     async fn get_item_history(&self, item_id: Uuid) -> Result<Vec<ItemHistory>> {
         let result = sqlx::query_as!(
             ItemHistoryDb,

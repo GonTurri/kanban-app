@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
@@ -50,6 +50,15 @@ impl UserPersistence for PostgresPersistence {
 
     async fn get_user(&self, id: Uuid) -> Result<Option<User>> {
         let result = sqlx::query_as!(UserDb , "SELECT * FROM users WHERE id = $1", id)
+            .fetch_optional(&self.pool)
+            .await?
+            .map(Into::into);
+
+        Ok(result)
+    }
+
+    async fn get_by_email(&self, email: &str) -> Result<Option<User>> {
+        let result = sqlx::query_as!(UserDb , "SELECT * FROM users WHERE email = $1", email)
             .fetch_optional(&self.pool)
             .await?
             .map(Into::into);

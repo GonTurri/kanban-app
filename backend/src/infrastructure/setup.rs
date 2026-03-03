@@ -1,3 +1,9 @@
+use crate::prelude::*;
+use crate::use_cases::auth::AuthUseCases;
+use crate::use_cases::board::BoardUseCases;
+use crate::use_cases::column::ColumnUseCases;
+use crate::use_cases::get_item_metrics_query::GetItemMetricsQuery;
+use crate::use_cases::item::ItemUseCases;
 use crate::{
     adapters::http::app_state::AppState,
     infrastructure::{argon2_password_hasher, config::AppConfig, postgres_persistence},
@@ -5,19 +11,38 @@ use crate::{
 };
 use std::fs::File;
 use std::sync::Arc;
-use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt};
-use crate::prelude::*;
+use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
 pub async fn init_app_state() -> Result<AppState> {
     let config = AppConfig::from_env();
     let postgres = Arc::new(postgres_persistence().await?);
-    let argon_hasher  = argon2_password_hasher();
+    let argon_hasher = Arc::new(argon2_password_hasher());
 
-    let user_use_cases = UserUseCases::new(Arc::new(argon_hasher), postgres.clone());
+    let user_use_cases = UserUseCases::new(argon_hasher.clone(), postgres.clone());
+    let auth_use_cases = AuthUseCases::new(
+        postgres.clone(),
+        postgres.clone(),
+        argon_hasher.clone(),
+        config.jwt_secret.clone(),
+        config.access_token_ttl,
+        config.refresh_token_ttl,
+    );
 
-    Ok(AppState{
+    let board_use_cases = BoardUseCases::new(postgres.clone(), postgres.clone(), postgres.clone(), postgres.clone());
+    let column_use_cases = ColumnUseCases::new(postgres.clone(), postgres.clone());
+    let item_use_cases = ItemUseCases::new(postgres.clone(), postgres.clone(), postgres.clone());
+    let get_items_metrics_query = GetItemMetricsQuery::new(postgres.clone(), postgres.clone(), postgres.clone());
+    
+
+
+    Ok(AppState {
         config: Arc::new(config),
         user_use_cases: Arc::new(user_use_cases),
+        auth_use_cases: Arc::new(auth_use_cases),
+        board_use_cases: Arc::new(board_use_cases),
+        item_use_cases: Arc::new(item_use_cases),
+        column_use_cases: Arc::new(column_use_cases),
+        get_item_metrics_query: Arc::new(get_items_metrics_query)
     })
 }
 
@@ -46,4 +71,3 @@ pub fn init_tracing() {
         .try_init()
         .ok();
 }
-

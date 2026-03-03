@@ -1,4 +1,5 @@
 mod user;
+mod auth;
 
 use axum::handler::HandlerWithoutStateExt;
 use axum::http::{StatusCode, Uri};
@@ -10,6 +11,7 @@ use axum::routing::get;
 pub fn router() -> Router<AppState> {
     Router::new().
         nest("/user", user::router()).
+        nest("/auth", auth::router()).
         route("/hello", get(handler))
         .fallback(fallback)
 }

@@ -1,10 +1,7 @@
-use argon2::{
-    Argon2,
-    password_hash::{PasswordHasher, SaltString, rand_core::OsRng},
-};
+use argon2::{Argon2, password_hash::{PasswordHasher, SaltString, rand_core::OsRng}, PasswordHash, PasswordVerifier};
 
 use crate::prelude::*;
-use crate::use_cases::user::UserCredentialsHasher;
+use crate::use_cases::user::{UserCredentialsHasher, UserCredentialsVerifier};
 #[derive(Default)]
 pub struct ArgonPasswordHasher {
     hasher: Argon2<'static>,
@@ -20,5 +17,18 @@ impl UserCredentialsHasher for ArgonPasswordHasher {
             .to_string();
 
         Ok(hash)
+    }
+}
+
+impl UserCredentialsVerifier for ArgonPasswordHasher {
+    fn verify_user_password(&self, password: &str, stored_hash: &str) -> bool {
+        let parsed_hash = match PasswordHash::new(stored_hash) {
+            Ok(hash) => hash,
+            Err(_) => return false,
+        };
+
+        self.hasher
+            .verify_password(password.as_bytes(), &parsed_hash)
+            .is_ok()
     }
 }

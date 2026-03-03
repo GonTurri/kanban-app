@@ -12,11 +12,17 @@ pub trait UserPersistence: Send + Sync {
     async fn create_user(&self, user: &User) -> Result<()>;
     async fn get_user(&self, id: Uuid) -> Result<Option<User>>;
 
+    async fn get_by_email(&self, email: &str) -> Result<Option<User>>;
+
     async fn exists_by_id(&self, id: Uuid) -> Result<bool>;
 }
 
 pub trait UserCredentialsHasher: Send + Sync {
     fn hash_password(&self, password: &str) -> Result<String>;
+}
+
+pub trait UserCredentialsVerifier: Send + Sync {
+    fn verify_user_password(&self, password: &str, stored_hash: &str) -> bool;
 }
 
 #[derive(Clone)]
@@ -69,6 +75,10 @@ mod test {
         }
 
         async fn get_user(&self, id: Uuid) -> Result<Option<User>> {
+            todo!()
+        }
+
+        async fn get_by_email(&self, email: &str) -> Result<Option<User>> {
             todo!()
         }
 
