@@ -29,6 +29,7 @@ pub struct BoardMemberDb {
 
 #[derive(sqlx::Type, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[sqlx(type_name = "board_role", rename_all = "lowercase")]
+#[serde(rename_all = "lowercase")]
 pub enum BoardRoleDb {
     Owner,
     Editor,

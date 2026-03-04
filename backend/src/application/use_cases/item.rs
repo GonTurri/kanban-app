@@ -66,7 +66,7 @@ impl ItemUseCases {
             .board_persistence
             .get_board(item.board_id)
             .await?
-            .unwrap();
+            .ok_or(AppError::ResourceNotFound("Board", item.board_id))?;
 
         if !board.can_view_board(action_user) {
             return Err(AppError::InvalidCredentials);
@@ -92,7 +92,7 @@ impl ItemUseCases {
             .board_persistence
             .get_board(column.board_id)
             .await?
-            .unwrap();
+            .ok_or(AppError::ResourceNotFound("Board", column.board_id))?;
 
         if !board.can_view_board(action_user) {
             return Err(AppError::InvalidCredentials);
@@ -121,7 +121,7 @@ impl ItemUseCases {
             .board_persistence
             .get_board(column.board_id)
             .await?
-            .unwrap();
+            .ok_or(AppError::ResourceNotFound("Board", column.board_id))?;
 
         if !board.can_edit_board(action_user) {
             return Err(AppError::InvalidCredentials);
@@ -199,7 +199,7 @@ impl ItemUseCases {
             .board_persistence
             .get_board(column.board_id)
             .await?
-            .unwrap();
+            .ok_or(AppError::ResourceNotFound("Board", column.board_id))?;
 
         if !board.can_edit_board(action_user) {
             return Err(AppError::InvalidCredentials);
@@ -227,7 +227,7 @@ impl ItemUseCases {
             .board_persistence
             .get_board(item.board_id)
             .await?
-            .unwrap();
+            .ok_or(AppError::ResourceNotFound("Board", item.board_id))?;
 
         if !board.can_edit_board(action_user) {
             return Err(AppError::InvalidCredentials);
