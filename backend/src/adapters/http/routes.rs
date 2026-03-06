@@ -1,21 +1,22 @@
-mod user;
 mod auth;
 mod board;
 mod column;
+mod item;
+mod user;
 
-use axum::handler::HandlerWithoutStateExt;
-use axum::http::{StatusCode, Uri};
-use axum::response::IntoResponse;
 use crate::adapters::http::app_state::AppState;
 use axum::Router;
+use axum::http::{StatusCode, Uri};
+use axum::response::IntoResponse;
 use axum::routing::get;
 
 pub fn router() -> Router<AppState> {
-    Router::new().
-        nest("/users", user::router()).
-        nest("/auth", auth::router()).
-        nest("/boards", board::router()).
-        nest("/columns", column::router())
+    Router::new()
+        .nest("/users", user::router())
+        .nest("/auth", auth::router())
+        .nest("/boards", board::router())
+        .nest("/columns", column::router())
+        .nest("/items", item::router())
         .route("/hello", get(handler))
         .fallback(fallback)
 }

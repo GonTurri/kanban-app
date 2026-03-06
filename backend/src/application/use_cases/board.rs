@@ -168,15 +168,15 @@ impl BoardUseCases {
     }
 
     #[instrument(skip(self))]
-    pub async fn add_member(&self,board_id: Uuid, action_user: Uuid, user: Uuid, role: BoardRole) -> Result<()> {
+    pub async fn add_member(&self, board_id: Uuid, action_user: Uuid, user_email: &str, role: BoardRole) -> Result<()> {
 
         info!("Adding new board member to board {:?}...", board_id);
 
         self.validate_user_exists(action_user).await?;
-        self.validate_user_exists(user).await?;
+        let user = self.user_persistence.get_by_email(user_email).await?.ok_or(AppError::UserEmailNotFound(user_email.to_owned()))?;
 
         let mut board = self.board_persistence.get_board(board_id).await?.ok_or(AppError::ResourceNotFound("Board", board_id))?;
-        let new_member = BoardMember::new(user, role);
+        let new_member = BoardMember::new(user.id, role);
 
         board.add_member(action_user, new_member)?;
 

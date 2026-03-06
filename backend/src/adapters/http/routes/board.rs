@@ -25,7 +25,7 @@ pub struct CreateBoardResponse {
 
 #[derive(Deserialize, Debug)]
 pub struct AddMemberPayload {
-    pub user_id: Uuid,
+    pub email: String,
     pub role: BoardRole,
 }
 
@@ -69,10 +69,10 @@ pub async fn add_member_handler(
     Json(payload): Json<AddMemberPayload>,
 ) -> Result<StatusCode> {
 
-    info!("User {} adding member {} to board {}", user.id, payload.user_id, board_id);
+    info!("User {} adding member {} to board {}", user.id, payload.email, board_id);
 
     board_use_cases
-        .add_member(board_id, user.id, payload.user_id, payload.role)
+        .add_member(board_id, user.id, &payload.email, payload.role)
         .await?;
 
     Ok(StatusCode::OK)

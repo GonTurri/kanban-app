@@ -1,11 +1,12 @@
 use crate::entities::item::Item;
 use crate::entities::item_history::ItemHistory;
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 const HOUR_IN_MINUTES: f64 = 60.0;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ItemMetrics {
     pub lead_time_hours: f64,
     pub cycle_time_hours: f64,

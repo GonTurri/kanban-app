@@ -1,6 +1,6 @@
-use axum::{http, Router};
 use axum::http::header::{AUTHORIZATION, CONTENT_TYPE};
-use tower_http::{cors::{Any, CorsLayer}, trace::TraceLayer};
+use axum::{http, Router};
+use tower_http::{cors::{CorsLayer}, trace::TraceLayer};
 use uuid::Uuid;
 
 use crate::{
@@ -11,13 +11,20 @@ use crate::{
 pub fn create_app(app_state: AppState) -> Router {
     init_tracing();
 
+    let frontend_origin = app_state.config.frontend_url
+        .parse::<http::HeaderValue>()
+        .expect("Invalid FRONTEND_URL format");
+
     let cors = CorsLayer::new()
-        .allow_origin(
-            "http://localhost:5173"
-                .parse::<http::HeaderValue>()
-                .unwrap(),
-        )
-        .allow_methods([http::Method::POST, http::Method::GET])
+        .allow_origin(frontend_origin)
+        .allow_methods([
+            http::Method::GET,
+            http::Method::POST,
+            http::Method::PUT,
+            http::Method::DELETE,
+            http::Method::OPTIONS,
+            http::Method::HEAD
+        ])
         .allow_headers([CONTENT_TYPE, AUTHORIZATION])
         .allow_credentials(true);
 

@@ -1,5 +1,5 @@
 use crate::domain_error::DomainError::{TodoLimitExceeded, WipLimitExceeded};
-use crate::domain_error::DomainResult;
+use crate::domain_error::{DomainError, DomainResult};
 use crate::entities::column_type::ColumnType;
 use crate::entities::item::Item;
 use crate::entities::item_history::ItemHistory;
@@ -16,8 +16,7 @@ pub struct BoardColumn {
 }
 
 impl BoardColumn {
-
-    pub fn new (board_id: Uuid, name: String, kind: ColumnType, order_index: usize) -> Self {
+    pub fn new(board_id: Uuid, name: String, kind: ColumnType, order_index: usize) -> Self {
         Self {
             id: Uuid::new_v4(),
             board_id,
@@ -26,7 +25,7 @@ impl BoardColumn {
             order_index,
         }
     }
-    
+
     pub fn new_item(
         &self,
         current_item_count: usize,
@@ -47,22 +46,35 @@ impl BoardColumn {
         ))
     }
 
-    pub fn move_item(&self, current_item_count: usize, item: &mut Item) -> DomainResult<ItemHistory> {
+    pub fn move_item(
+        &self,
+        current_item_count: usize,
+        item: &mut Item,
+    ) -> DomainResult<ItemHistory> {
+        if item.board_id != self.board_id {
+            return Err(DomainError::Static(
+                "Item is not in the same board as column",
+            ));
+        }
+
         self.can_accept_new_item(current_item_count)?;
 
         let is_done = match self.kind {
             ColumnType::Done => true,
-            _ => false
+            _ => false,
         };
 
         item.move_to_column(self.id, is_done)
     }
 
-
     fn can_accept_new_item(&self, current_items_count: usize) -> DomainResult<()> {
         match self.kind {
-            ColumnType::Todo { limit: Some(limit) } if limit <= current_items_count => Err(TodoLimitExceeded(limit)),
-            ColumnType::Wip { limit: Some(limit) } if limit <= current_items_count => Err(WipLimitExceeded(limit)),
+            ColumnType::Todo { limit: Some(limit) } if limit <= current_items_count => {
+                Err(TodoLimitExceeded(limit))
+            }
+            ColumnType::Wip { limit: Some(limit) } if limit <= current_items_count => {
+                Err(WipLimitExceeded(limit))
+            }
             _ => Ok(()),
         }
     }

@@ -26,6 +26,10 @@ impl IntoResponse for AppError {
             AppError::ResourceNotFound(resource_name, id) => {
                 (StatusCode::NOT_FOUND, format!("{} of id {} not found", resource_name, id)).into_response()
             }
+
+            AppError::UserEmailNotFound( email) => {
+                (StatusCode::NOT_FOUND, format!("user of email {} not found", email)).into_response()
+            }
             _ => (StatusCode::INTERNAL_SERVER_ERROR, "Internal error").into_response(),
         }
     }

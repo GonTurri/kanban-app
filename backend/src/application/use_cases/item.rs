@@ -6,7 +6,30 @@ use crate::entities::item_priority::ItemPriority;
 use crate::prelude::*;
 use async_trait::async_trait;
 use std::sync::Arc;
+use chrono::Utc;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ItemHistoryDto {
+    pub id: Uuid,
+    pub item_id: Uuid,
+    pub prev_column_id: Option<Uuid>,
+    pub new_column_id: Uuid,
+    pub timestamp: chrono::DateTime<Utc>,
+}
+
+impl From<ItemHistory> for ItemHistoryDto {
+    fn from(value: ItemHistory) -> Self {
+        Self {
+            id: value.id,
+            item_id: value.item_id,
+            prev_column_id: value.prev_column_id, 
+            new_column_id: value.new_column_id,
+            timestamp: value.timestamp
+        }
+    }
+}
 
 #[async_trait]
 pub trait ItemPersistence: Send + Sync {
@@ -55,7 +78,7 @@ impl ItemUseCases {
         &self,
         item_id: Uuid,
         action_user: Uuid,
-    ) -> Result<Vec<ItemHistory>> {
+    ) -> Result<Vec<ItemHistoryDto>> {
         let item = self
             .item_persistence
             .get_item(item_id)
@@ -72,7 +95,12 @@ impl ItemUseCases {
             return Err(AppError::InvalidCredentials);
         }
 
-        self.item_persistence.get_item_history(item_id).await
+        let result: Vec<ItemHistoryDto> = self.item_persistence.get_item_history(item_id).await?
+            .into_iter()
+            .map(ItemHistoryDto::from)
+            .collect();
+        
+        Ok(result)
     }
 
     pub async fn get_items(

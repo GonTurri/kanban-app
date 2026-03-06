@@ -21,4 +21,7 @@ pub enum AppError {
     
     #[error("Resource not found {0} of id: {1}")]
     ResourceNotFound(&'static str, Uuid),
+
+    #[error("User of email: {0} not found")]
+    UserEmailNotFound(String),
 }

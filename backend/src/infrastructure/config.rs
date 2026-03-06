@@ -9,6 +9,7 @@ pub struct AppConfig {
     pub host: String,
     pub port: String,
     pub jwt_secret: String,
+    pub frontend_url: String,
     pub access_token_ttl: Duration,
     pub refresh_token_ttl: Duration,
 }
@@ -18,6 +19,9 @@ impl AppConfig {
 
         let host = env::var("SERVER_HOST").unwrap_or("127.0.0.1".to_owned());
         let port = env::var("SERVER_PORT").unwrap_or("8080".to_owned());
+
+        let frontend_url = env::var("FRONTEND_URL")
+            .unwrap_or("http://localhost:5173".to_owned());
 
         let jwt_secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
 
@@ -35,6 +39,7 @@ impl AppConfig {
             host,
             port,
             jwt_secret,
+            frontend_url,
             access_token_ttl: Duration::from_secs(access_token_ttl_mins * 60),
             refresh_token_ttl: Duration::from_secs(refresh_token_ttl_days * 24 * 60 * 60),
         }

@@ -15,8 +15,6 @@ use crate::entities::column_type::ColumnType;
 use crate::prelude::*;
 use crate::use_cases::column::ColumnUseCases;
 
-// --- DTOs (Payloads) ---
-
 #[derive(Deserialize, Debug)]
 pub struct CreateColumnPayload {
     pub name: String,
