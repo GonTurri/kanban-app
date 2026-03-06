@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: kanban_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: kanban
+#    ports:
+#      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d kanban"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: ./backend
+    container_name: kanban_api
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/kanban
+      - RUST_LOG=info,tower_http=debug,sqlx=info
+      - REFRESH_TOKEN_TTL_DAYS=30
+      - ACCESS_TOKEN_TTL_MINS=15
+      - FRONTEND_URL=http://localhost:5173
+      - JWT_SECRET=replace_this_with_a_random_secret
+      - SERVER_PORT=8080
+      - SERVER_HOST=0.0.0.0
+
+volumes:
+  pgdata:

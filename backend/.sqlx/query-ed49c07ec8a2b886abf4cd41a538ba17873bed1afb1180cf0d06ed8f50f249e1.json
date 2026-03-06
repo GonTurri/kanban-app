@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO board_members (id, user_id, board_id, role) VALUES ($1, $2, $3, $4)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        {
+          "Custom": {
+            "name": "board_role",
+            "kind": {
+              "Enum": [
+                "owner",
+                "editor",
+                "viewer"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ed49c07ec8a2b886abf4cd41a538ba17873bed1afb1180cf0d06ed8f50f249e1"
+}

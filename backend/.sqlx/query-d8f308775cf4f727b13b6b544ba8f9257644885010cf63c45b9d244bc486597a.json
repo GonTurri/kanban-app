@@ -1,0 +1,63 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, name, order_index,\n            column_type AS \"column_type: ColumnKindDb\",\n            column_limit,\n            board_id\n            FROM board_columns\n            WHERE board_id = $1\n            ORDER BY order_index ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "order_index",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "column_type: ColumnKindDb",
+        "type_info": {
+          "Custom": {
+            "name": "column_kind",
+            "kind": {
+              "Enum": [
+                "todo",
+                "wip",
+                "done"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "column_limit",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "board_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "d8f308775cf4f727b13b6b544ba8f9257644885010cf63c45b9d244bc486597a"
+}

@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO board_columns (id, name, column_type, column_limit, order_index, board_id)\n            VALUES ($1, $2, $3, $4, $5, $6)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar",
+        {
+          "Custom": {
+            "name": "column_kind",
+            "kind": {
+              "Enum": [
+                "todo",
+                "wip",
+                "done"
+              ]
+            }
+          }
+        },
+        "Int4",
+        "Int8",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b090dce0fc76e69deee650af0f5b5382e5f0ca713a6f6d8a8d114c2764f6709a"
+}

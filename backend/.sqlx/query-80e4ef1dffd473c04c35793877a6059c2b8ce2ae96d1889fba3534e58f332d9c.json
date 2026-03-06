@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE board_members SET role = $2 WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        {
+          "Custom": {
+            "name": "board_role",
+            "kind": {
+              "Enum": [
+                "owner",
+                "editor",
+                "viewer"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "80e4ef1dffd473c04c35793877a6059c2b8ce2ae96d1889fba3534e58f332d9c"
+}

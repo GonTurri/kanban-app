@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO board_columns (id, name, column_type, column_limit, order_index, board_id)\n            VALUES ($1, $2, $3, $4, $5, $6)\n            ON CONFLICT (id) DO UPDATE\n            SET name = EXCLUDED.name,\n            column_type = EXCLUDED.column_type,\n            column_limit = EXCLUDED.column_limit,\n            order_index = EXCLUDED.order_index",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar",
+        {
+          "Custom": {
+            "name": "column_kind",
+            "kind": {
+              "Enum": [
+                "todo",
+                "wip",
+                "done"
+              ]
+            }
+          }
+        },
+        "Int4",
+        "Int8",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a50c748abd92579d33767ed5eb697ed8716a38f3f4116b8e86ca5d717f650b53"
+}

@@ -1,0 +1,81 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                id,\n                title,\n                description,\n                priority AS \"priority: ItemPriorityDb\",\n                done,\n                board_id,\n                column_id,\n                assigned_to,\n                created_at\n            FROM board_items\n            WHERE id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "priority: ItemPriorityDb",
+        "type_info": {
+          "Custom": {
+            "name": "item_priority",
+            "kind": {
+              "Enum": [
+                "low",
+                "medium",
+                "high"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "done",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "board_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 6,
+        "name": "column_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 7,
+        "name": "assigned_to",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 8,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "0ce87319ac3764b1bf89ab382be48bdcb35a1d2b531f876f944faa0aaa2c458c"
+}

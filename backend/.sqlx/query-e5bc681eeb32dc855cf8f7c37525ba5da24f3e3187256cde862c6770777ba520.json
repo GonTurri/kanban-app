@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT \n        id,\n        new_column_id,\n        prev_column_id,\n        item_id,\n        timestamp\n        FROM item_histories\n        WHERE item_id = $1\n        ORDER BY timestamp ASC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "new_column_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "prev_column_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "item_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "timestamp",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "e5bc681eeb32dc855cf8f7c37525ba5da24f3e3187256cde862c6770777ba520"
+}
