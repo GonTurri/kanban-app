@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT\n                b.id,\n                b.owner_id,\n                b.title,\n                b.description,\n                JSONB_AGG(\n                    JSONB_BUILD_OBJECT(\n                        'id', m.id,\n                        'user_id', m.user_id,\n                        'role', m.role\n                    )\n                ) AS \"members!: Json<Vec<BoardMemberDb>>\"\n            FROM boards b\n            INNER JOIN board_members m ON b.id = m.board_id\n            WHERE b.id = $1\n            GROUP BY b.id\n            ",
+  "query": "\n            SELECT\n                b.id,\n                b.owner_id,\n                b.title,\n                b.description,\n                JSONB_AGG(\n                    JSONB_BUILD_OBJECT(\n                        'id', m.id,\n                        'user_id', m.user_id,\n                        'role', m.role\n                    )\n                ORDER BY m.role\n                ) AS \"members!: Json<Vec<BoardMemberDb>>\"\n            FROM boards b\n            INNER JOIN board_members m ON b.id = m.board_id\n            WHERE b.id = $1\n            GROUP BY b.id, b.owner_id, b.title, b.description\n            ",
   "describe": {
     "columns": [
       {
@@ -42,5 +42,5 @@
       null
     ]
   },
-  "hash": "1ea632b83f5e26e4fa0c7c64a5f82acfc300609229281b6993f7aaa564830fd6"
+  "hash": "131b7a6270fc161da7afa8a397c97ad8c3301503930a90e95e1c4ff8e46a2ca6"
 }

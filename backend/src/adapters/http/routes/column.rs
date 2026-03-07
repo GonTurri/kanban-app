@@ -71,7 +71,7 @@ pub async fn update_column_handler(
 #[instrument(skip(column_use_cases, payload))]
 pub async fn move_column_handler(
     State(column_use_cases): State<Arc<ColumnUseCases>>,
-    Path((board_id, column_id)): Path<(Uuid, Uuid)>,
+    Path((column_id, board_id)): Path<(Uuid, Uuid)>,
     user: AuthUser,
     Json(payload): Json<MoveColumnPayload>,
 ) -> Result<StatusCode> {

@@ -43,7 +43,7 @@ impl UserUseCases {
 
     #[instrument(skip(self))]
     pub async fn register(&self, username: String, email: String, password: &SecretString) -> Result<()> {
-        info!("Registerin user...");
+        info!("Registering user...");
 
         let hash = self.hasher.hash_password(password.expose_secret())?;
         let user = User::new(username, email, hash);
@@ -52,6 +52,11 @@ impl UserUseCases {
         info!("Registering user finished.");
 
         Ok(())
+    }
+
+    pub async fn get_user_by_id(&self, id: Uuid) -> Result<User>{
+       self.persistence.get_user(id).await?
+            .ok_or(AppError::ResourceNotFound("User", id))
     }
 }
 

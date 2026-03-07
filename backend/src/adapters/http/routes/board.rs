@@ -9,7 +9,7 @@ use uuid::Uuid;
 use crate::adapters::http::app_state::AppState;
 use crate::adapters::http::extractors::AuthUser;
 use crate::entities::board_role::BoardRole;
-use crate::use_cases::board::{BoardResponseDto, BoardUseCases};
+use crate::use_cases::board::{BoardResponseDto, BoardSummaryDto, BoardUseCases};
 use crate::prelude::*;
 
 #[derive(Deserialize, Debug)]
@@ -111,9 +111,20 @@ pub async fn remove_member_handler(
     Ok(StatusCode::NO_CONTENT)
 }
 
+#[instrument(skip(board_use_cases))]
+pub async fn get_my_boards_handler(
+    State(board_use_cases): State<Arc<BoardUseCases>>,
+    user: AuthUser,
+) -> Result<Json<Vec<BoardSummaryDto>>> {
+    info!("User {} is fetching their boards", user.id);
+    let boards = board_use_cases.get_user_boards(user.id).await?;
+    Ok(Json(boards))
+}
+
 
 pub fn router() -> Router<AppState> {
     Router::new()
+        .route("/", get(get_my_boards_handler))
         .route("/", post(create_board_handler))
         .route("/{id}", get(get_board_handler))
         .route("/{id}/members", post(add_member_handler))

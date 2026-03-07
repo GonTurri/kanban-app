@@ -117,6 +117,11 @@ impl Board {
             && m.is_owner())
     }
 
+    pub fn get_member(&self, user_id: Uuid) -> Option<&BoardMember>{
+        self.members.iter().filter(|m| m.user_id == user_id)
+            .next()
+    }
+
     fn check_owner_count_for_removal(&self) -> DomainResult<()> {
         let owner_count = self.members.iter().filter(|m| m.is_owner()).count();
         if owner_count <= 1 {

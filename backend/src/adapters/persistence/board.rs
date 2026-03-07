@@ -36,6 +36,24 @@ pub enum BoardRoleDb {
     Viewer,
 }
 
+
+#[derive(serde::Deserialize, Debug, Clone)]
+pub struct BoardMemberWithUserDb {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub role: BoardRoleDb,
+    pub username: String,
+    pub email: String,
+}
+#[derive(sqlx::FromRow, Debug, Deserialize, Clone)]
+pub struct BoardWithMembersViewDb {
+    pub id: Uuid,
+    pub owner_id: Uuid,
+    pub title: String,
+    pub description: String,
+    pub members: Json<Vec<BoardMemberWithUserDb>>,
+}
+
 impl From<BoardDb> for Board {
     fn from(value: BoardDb) -> Self {
         Self {
@@ -139,17 +157,55 @@ impl BoardPersistence for PostgresPersistence {
                         'user_id', m.user_id,
                         'role', m.role
                     )
+                ORDER BY m.role
                 ) AS "members!: Json<Vec<BoardMemberDb>>"
             FROM boards b
             INNER JOIN board_members m ON b.id = m.board_id
             WHERE b.id = $1
-            GROUP BY b.id
+            GROUP BY b.id, b.owner_id, b.title, b.description
             "#,
             id
         )
         .fetch_optional(&self.pool)
         .await?
         .map(Into::into);
+
+        Ok(result)
+    }
+
+    async fn get_board_with_member_users(
+        &self,
+        id: Uuid
+    ) -> Result<Option<BoardWithMembersViewDb>> {
+
+        let result = sqlx::query_as!(
+        BoardWithMembersViewDb,
+        r#"
+        SELECT
+            b.id,
+            b.owner_id,
+            b.title,
+            b.description,
+            JSONB_AGG(
+                JSONB_BUILD_OBJECT(
+                    'id', m.id,
+                    'user_id', m.user_id,
+                    'role', m.role,
+                    'username', u.username,
+                    'email', u.email
+                )
+                ORDER BY m.role
+            ) AS "members!: Json<Vec<BoardMemberWithUserDb>>"
+        FROM boards b
+        INNER JOIN board_members m ON b.id = m.board_id
+        INNER JOIN users u ON u.id = m.user_id
+        WHERE b.id = $1
+        GROUP BY b.id, b.owner_id, b.title, b.description
+        "#,
+        id
+    )
+            .fetch_optional(&self.pool)
+            .await?;
 
         Ok(result)
     }
@@ -198,6 +254,43 @@ impl BoardPersistence for PostgresPersistence {
                 .fetch_one(&self.pool)
                 .await?
                 .unwrap_or(false);
+
+        Ok(result)
+    }
+
+    async fn get_user_boards(&self, user_id: Uuid) -> Result<Vec<Board>> {
+        let result = sqlx::query_as!(
+            BoardDb,
+            r#"
+            SELECT
+                b.id,
+                b.owner_id,
+                b.title,
+                b.description,
+                JSONB_AGG(
+                    JSONB_BUILD_OBJECT(
+                        'id', m.id,
+                        'user_id', m.user_id,
+                        'role', m.role
+                    )
+                ) AS "members!: Json<Vec<BoardMemberDb>>"
+            FROM boards b
+            INNER JOIN board_members m ON b.id = m.board_id
+            WHERE b.owner_id = $1 OR EXISTS (
+            SELECT 1
+            FROM board_members bm
+            WHERE bm.board_id = b.id
+            AND bm.user_id = $1
+            )
+            GROUP BY b.id, b.owner_id, b.title, b.description
+            "#,
+            user_id
+        )
+            .fetch_all(&self.pool)
+            .await?
+            .into_iter()
+            .map(Into::into)
+            .collect();
 
         Ok(result)
     }

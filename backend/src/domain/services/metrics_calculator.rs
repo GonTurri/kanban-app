@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-const HOUR_IN_MINUTES: f64 = 60.0;
+const SECONDS_IN_HOUR: f64 = 3600.0;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ItemMetrics {
@@ -26,6 +26,7 @@ impl ItemMetricsCalculator {
         }
 
         histories.sort_by_key(|h| h.timestamp);
+
         let done_timestamp = histories
             .iter()
             .rev()
@@ -33,10 +34,10 @@ impl ItemMetricsCalculator {
             .map(|h| h.timestamp)?;
 
         let lead_time_hours = Self::calculate_lead_time(item, &done_timestamp);
+
         let cycle_time_hours = Self::calculate_cycle_time(
             histories,
             wip_column_ids,
-            &done_timestamp,
             lead_time_hours,
         );
 
@@ -47,30 +48,40 @@ impl ItemMetricsCalculator {
     }
 
     fn calculate_lead_time(item: &Item, done_timestamp: &DateTime<Utc>) -> f64 {
-        done_timestamp
+        let seconds = done_timestamp
             .signed_duration_since(item.created_at)
-            .num_minutes() as f64
-            / HOUR_IN_MINUTES
+            .num_seconds();
+
+        seconds as f64 / SECONDS_IN_HOUR
     }
 
     fn calculate_cycle_time(
         histories: &[ItemHistory],
         wip_column_ids: &[Uuid],
-        done_timestamp: &DateTime<Utc>,
         fall_back_lead_time: f64,
     ) -> f64 {
-        let started_at = histories
-            .iter()
-            .find(|h| wip_column_ids.contains(&h.new_column_id))
-            .map(|h| h.timestamp);
+        let mut total_wip_seconds = 0;
+        let mut wip_start: Option<DateTime<Utc>> = None;
 
-        if let Some(started_at) = started_at {
-            return done_timestamp
-                .signed_duration_since(started_at)
-                .num_minutes() as f64
-                / HOUR_IN_MINUTES;
+        for history in histories {
+            if wip_column_ids.contains(&history.new_column_id) {
+                wip_start.get_or_insert(history.timestamp);
+            } else if let Some(start) = wip_start.take() {
+                    total_wip_seconds += history
+                        .timestamp
+                        .signed_duration_since(start)
+                        .num_seconds();
+                }
         }
 
-        fall_back_lead_time
+        if let Some(start) = wip_start {
+            total_wip_seconds += Utc::now().signed_duration_since(start).num_seconds();
+        }
+
+        if total_wip_seconds == 0 {
+            return fall_back_lead_time;
+        }
+
+        total_wip_seconds as f64 / SECONDS_IN_HOUR
     }
 }
