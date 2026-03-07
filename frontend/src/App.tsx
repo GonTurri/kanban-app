@@ -3,8 +3,13 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { useAuth } from './context/AuthContext';
+import { useSilentRefresh } from './hooks/useSilentRefresh';
 
 function App() {
+    const { isAuthenticated } = useAuth();
+    useSilentRefresh(isAuthenticated);
+
     return (
         <Routes>
             <Route path="/login" element={<Login />} />
