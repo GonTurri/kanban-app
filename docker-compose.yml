@@ -22,7 +22,7 @@ services:
     container_name: kanban_api
     restart: always
     ports:
-      - "8080:8080"
+      - "28080:8080"
     depends_on:
       db:
         condition: service_healthy
@@ -31,10 +31,22 @@ services:
       - RUST_LOG=info,tower_http=debug,sqlx=info
       - REFRESH_TOKEN_TTL_DAYS=30
       - ACCESS_TOKEN_TTL_MINS=15
-      - FRONTEND_URL=http://localhost:5173
+      - FRONTEND_URL=http://localhost:28000
       - JWT_SECRET=replace_this_with_a_random_secret
       - SERVER_PORT=8080
       - SERVER_HOST=0.0.0.0
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - VITE_API_BASE_URL=http://localhost:28080/api
+    container_name: kanban_frontend
+    restart: always
+    ports:
+      - "28000:80"
+    depends_on:
+      - api
 
 volumes:
   pgdata:
