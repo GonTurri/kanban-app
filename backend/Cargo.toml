@@ -21,3 +21,4 @@ async-trait = "0.1.89"
 axum-extra = { version = "0.10", features = ["cookie", "typed-header"] }
 time = "0.3"
 jsonwebtoken = "9.0.0"
+validator = { version = "0.18", features = ["derive"] }

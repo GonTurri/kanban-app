@@ -10,11 +10,14 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{info, instrument};
 use uuid::Uuid;
+use validator::{Validate};
 const REFRESH_TOKEN_COOKIE_NAME: &str = "refresh_token";
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Validate)]
 pub struct LoginPayload {
+    #[validate(email(message = "Invalid email format"))]
     pub email: String,
+    #[validate(length(max = 255, message = "Password too long"))]
     pub password: String,
 }
 
@@ -33,6 +36,8 @@ pub async fn login_handler(
     Json(payload): Json<LoginPayload>,
 ) -> Result<(CookieJar, Json<AuthResponse>)> {
     info!("Starting login process");
+
+    payload.validate()?;
 
     let (access_token, refresh_token) = auth_use_cases
         .login(&payload.email, &payload.password)

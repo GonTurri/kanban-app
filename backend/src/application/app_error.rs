@@ -24,4 +24,7 @@ pub enum AppError {
 
     #[error("User of email: {0} not found")]
     UserEmailNotFound(String),
+
+    #[error("Validation error: {0}")]
+    Validation(#[from] validator::ValidationErrors),
 }

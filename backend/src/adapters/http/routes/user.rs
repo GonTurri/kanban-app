@@ -6,17 +6,23 @@ use secrecy::SecretString;
 use serde::{Deserialize, Serialize};
 use tracing::{info, instrument};
 use uuid::Uuid;
+use validator::Validate;
 use crate::adapters::http::app_state::AppState;
 use crate::adapters::http::extractors::AuthUser;
 use crate::entities::user::User;
 use crate::prelude::*;
 use crate::use_cases::user::UserUseCases;
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Validate)]
 pub struct RegisterPayload {
+    #[validate(length(min = 3, max = 50, message = "Username must be between 3 and 50 characters"))]
     username: String,
+
+    #[validate(email(message = "Invalid email format"))]
     email: String,
-    password: SecretString,
+
+    #[validate(length(min = 6, max = 128, message = "Password must be at least 6 characters"))]
+    password: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -47,7 +53,12 @@ pub async fn register(
 ) -> Result<impl IntoResponse> {
     info!("Register user called");
 
-    user_use_cases.register(payload.username, payload.email, &payload.password).await?;
+    payload.validate()?;
+
+    let secret_password = SecretString::from(payload.password);
+
+
+    user_use_cases.register(payload.username, payload.email, &secret_password).await?;
     Ok(
         (
             StatusCode::CREATED,

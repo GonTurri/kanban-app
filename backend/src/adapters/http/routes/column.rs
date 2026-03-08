@@ -8,15 +8,16 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{info, instrument};
 use uuid::Uuid;
-
+use validator::Validate;
 use crate::adapters::http::app_state::AppState;
 use crate::adapters::http::extractors::AuthUser;
 use crate::entities::column_type::ColumnType;
 use crate::prelude::*;
 use crate::use_cases::column::ColumnUseCases;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Validate)]
 pub struct CreateColumnPayload {
+    #[validate(length(min = 1, max = 50, message = "Column name must be between 1 and 50 characters"))]
     pub name: String,
     pub kind: ColumnType,
     pub target_index: usize,
@@ -27,8 +28,9 @@ pub struct CreateResponse {
     pub id: Uuid,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Validate)]
 pub struct UpdateColumnPayload {
+    #[validate(length(min = 1, max = 50, message = "Column name must be between 1 and 50 characters"))]
     pub name: String,
     pub kind: ColumnType,
 }
@@ -47,6 +49,8 @@ pub async fn add_column_handler(
 ) -> Result<(StatusCode, Json<CreateResponse>)> {
     info!("User {} adding column to board {}", user.id, board_id);
 
+    payload.validate()?;
+
     let column_id = column_use_cases
         .add_board_column(board_id, user.id, payload.name, payload.kind, payload.target_index)
         .await?;
@@ -62,6 +66,8 @@ pub async fn update_column_handler(
     Json(payload): Json<UpdateColumnPayload>,
 ) -> Result<StatusCode> {
     info!("User {} updating column {}", user.id, column_id);
+
+    payload.validate()?;
 
     column_use_cases.update_column(column_id, user.id, payload.name, payload.kind).await?;
 

@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{info, instrument};
 use uuid::Uuid;
-
+use validator::Validate;
 use crate::adapters::http::app_state::AppState;
 use crate::adapters::http::extractors::AuthUser;
 use crate::entities::item_priority::ItemPriority;
@@ -23,17 +23,21 @@ pub struct PaginationQuery {
     pub offset: Option<usize>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Validate)]
 pub struct AddItemPayload {
+    #[validate(length(min = 1, max = 255, message = "Title must be between 1 and 255 characters"))]
     pub title: String,
+    #[validate(length(max = 2000, message = "Description is too long"))]
     pub description: Option<String>,
     pub assigned_to: Option<Uuid>,
     pub priority: ItemPriority,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Validate)]
 pub struct UpdateItemPayload {
+    #[validate(length(min = 1, max = 255, message = "Title must be between 1 and 255 characters"))]
     pub title: String,
+    #[validate(length(max = 2000, message = "Description is too long"))]
     pub description: Option<String>,
     pub assigned_to: Option<Uuid>,
     pub priority: ItemPriority,
@@ -78,6 +82,8 @@ pub async fn add_item_handler(
 ) -> Result<(StatusCode, Json<CreateResponse>)> {
     info!("User {} adding item to column {}", user.id, column_id);
 
+    payload.validate()?;
+
     let item_id = item_use_cases
         .add_item(column_id, payload.title, payload.description, payload.assigned_to, payload.priority, user.id)
         .await?;
@@ -93,6 +99,8 @@ pub async fn update_item_handler(
     Json(payload): Json<UpdateItemPayload>,
 ) -> Result<StatusCode> {
     info!("User {} updating item {}", user.id, item_id);
+
+    payload.validate()?;
 
     item_use_cases
         .update_item_details(item_id, payload.title, payload.description, payload.assigned_to, payload.priority, user.id)

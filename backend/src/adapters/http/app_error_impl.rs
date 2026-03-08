@@ -29,6 +29,9 @@ impl IntoResponse for AppError {
 
             AppError::UserEmailNotFound( email) => {
                 (StatusCode::NOT_FOUND, format!("user of email {} not found", email)).into_response()
+            },
+            AppError::Validation(err) => {
+                (StatusCode::BAD_REQUEST, err.to_string()).into_response()
             }
             _ => (StatusCode::INTERNAL_SERVER_ERROR, "Internal error").into_response(),
         }

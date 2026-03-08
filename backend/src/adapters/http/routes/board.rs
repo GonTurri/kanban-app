@@ -6,15 +6,18 @@ use axum::routing::{delete, get, post, put};
 use serde::{Deserialize, Serialize};
 use tracing::{info, instrument};
 use uuid::Uuid;
+use validator::Validate;
 use crate::adapters::http::app_state::AppState;
 use crate::adapters::http::extractors::AuthUser;
 use crate::entities::board_role::BoardRole;
 use crate::use_cases::board::{BoardResponseDto, BoardSummaryDto, BoardUseCases};
 use crate::prelude::*;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Validate)]
 pub struct CreateBoardPayload {
+    #[validate(length(min = 1, max = 100, message = "Title must be between 1 and 100 characters"))]
     pub title: String,
+    #[validate(length(max = 1000, message = "Description is too long"))]
     pub description: String,
 }
 
@@ -23,8 +26,9 @@ pub struct CreateBoardResponse {
     pub id: Uuid,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Validate)]
 pub struct AddMemberPayload {
+    #[validate(email(message = "Invalid email format"))]
     pub email: String,
     pub role: BoardRole,
 }
@@ -52,6 +56,8 @@ pub async fn create_board_handler(
 
     info!("User {} creating a new board", user.id);
 
+    payload.validate()?;
+
     let board_id = board_use_cases
         .create_board(payload.title, payload.description, user.id)
         .await?;
@@ -70,6 +76,8 @@ pub async fn add_member_handler(
 ) -> Result<StatusCode> {
 
     info!("User {} adding member {} to board {}", user.id, payload.email, board_id);
+
+    payload.validate()?;
 
     board_use_cases
         .add_member(board_id, user.id, &payload.email, payload.role)
