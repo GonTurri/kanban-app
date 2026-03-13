@@ -75,12 +75,19 @@ export const ItemModal: React.FC<ItemModalProps> = ({ item, columns, members, ca
     };
 
     const formatDecimalHours = (decimalHours: number) => {
-        const hours = Math.floor(decimalHours);
-        const minutes = Math.round((decimalHours - hours) * 60);
+        const totalMinutes = Math.round(decimalHours * 60);
 
-        if (hours === 0) return `${minutes}m`;
-        if (minutes === 0) return `${hours}h`;
-        return `${hours}h ${minutes}m`;
+        const days = Math.floor(totalMinutes / (24 * 60));
+        const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
+        const minutes = totalMinutes % 60;
+
+        const parts = [];
+
+        if (days > 0) parts.push(`${days}d`);
+        if (hours > 0) parts.push(`${hours}h`);
+        if (minutes > 0 || parts.length === 0) parts.push(`${minutes}m`);
+
+        return parts.join(' ');
     };
 
     return (
